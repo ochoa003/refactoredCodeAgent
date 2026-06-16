@@ -1,0 +1,189 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "revisar-codigo",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f2ba5924-79f8-4c16-8209-fb4265670ee8",
+      "name": "Webhook",
+      "webhookId": "ec804ae7-5c58-4557-a154-4a0ea15cb18b"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un ingeniero de software senior experto en Python. Tu tarea es recibir fragmentos de código crudo y devolverlos completamente documentados. Además, debes analizar la estructura y sugerir mejoras. Al hacer sugerencias, prioriza siempre la simplicidad del desarrollo, recomendando enfoques de Clean Architecture o arquitecturas de monolito modular por encima de microservicios o sobreingenierías innecesarias.\n\nCódigo a revisar:\n{{ $json.body.codigo }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "d236a69c-96e6-4ed2-9c0b-7bb3679b0a80",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        240
+      ],
+      "id": "57652544-22af-42b5-b56a-1bd9bce15977",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RWKJKcI92UXI5fVT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"output\": $json.output } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        800,
+        0
+      ],
+      "id": "fa82b443-093c-4ad9-82e2-0eff941e54b5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9df5ccb7-ec0c-49bc-8354-5dafcd281755",
+              "leftValue": "={{ $json.body.codigo }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "453ed837-773c-4a8f-9dc5-9720c40c8559",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"output\": \"Error: Debes enviar la variable 'codigo' en tu petición\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        160,
+        240
+      ],
+      "id": "2612c894-8f81-400f-b9f0-2a4d5efddf35",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5b5257de-84a4-4fb1-81ef-5fcd07a311ee",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6dc3dd1f38d729eeb371de7c765e0b558fc2c01e9d659c25b8823328405ff41c"
+  },
+  "nodeGroups": [],
+  "id": "YI4zfSm0x0SFDoZB",
+  "tags": []
+}
